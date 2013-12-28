@@ -25,6 +25,13 @@ $ gett
 Please enter your Ge.tt email: example@example.com
 Please enter your Ge.tt password: verysecurepassword
 Please enter your API KEY: supersecretapikey
+Validating credentials ...
+Credentials verified  ...
+Fetching shares ...
+1 file(s) in share: 5d1ctaB1 (http://ge.tt/5d1ctaB1)
+1 file(s) in share: 8BSfsaB1 (http://ge.tt/8BSfsaB1)
+1 file(s) in share: 93hTsaB1 (http://ge.tt/93hTsaB1)
+2 file(s) in share: 1m4yqaB1 (http://ge.tt/1m4yqaB1)
 ```
 
 ## License

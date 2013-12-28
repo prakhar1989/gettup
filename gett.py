@@ -145,8 +145,7 @@ def setup_tokens():
 def get_access_token():
     return read_config('accesstoken') or setup_tokens()
 
-if __name__ == "__main__":
-
+def main():
     parser = argparse.ArgumentParser(description="Upload files to ge.tt via the command line")
     parser.add_argument("-s", "--share", metavar="share_name", type=str,
                         help="get info for a specific share")
@@ -166,3 +165,6 @@ if __name__ == "__main__":
         upload_file(args.share, args.upload)
     else:
         get_shares()
+
+if __name__ == "__main__":
+    main()
