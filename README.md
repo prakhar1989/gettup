@@ -93,7 +93,7 @@ shot2.png 595250 bytes  http://ge.tt/5d1ctaB1/v/0
 ## Upgrade
 To upgrade GettUp run the following command
 ```
-sudo pip install -U Markdown
+sudo pip install -U gettup
 ```
 
 ## Thanks 
