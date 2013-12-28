@@ -34,5 +34,10 @@ Fetching shares ...
 2 file(s) in share: 1m4yqaB1 (http://ge.tt/1m4yqaB1)
 ```
 
+## Upgrade
+To upgrade GettUp run the following command
+```sh
+sudo pip install -U Markdown
+```
 ## License
 Gettup is released under the MIT license.
