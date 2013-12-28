@@ -21,22 +21,27 @@ import json
 import sys
 import argparse
 import os
+from glob import glob
 
 # GETT URLS
 LOGIN_URL = "http://open.ge.tt/1/users/login"
 SHARE_URL = "http://open.ge.tt/1/shares/create?accesstoken="
+VERBOSE = True
+
+def logg(msg):
+    if VERBOSE:
+        print msg
 
 def refresh_access_token():
-    print "Updating expired tokens ..."
+    logg("Updating expired tokens ...")
     refreshtoken = read_config('refreshtoken')
     r = requests.post(LOGIN_URL, data=json.dumps({'refreshtoken': refreshtoken }))
     accesstoken, refreshtoken = r.json().get('accesstoken'), r.json().get('refreshtoken')
     write_config({'accesstoken': accesstoken, 'refreshtoken': refreshtoken})
-    # func(accesstoken)
 
 def get_shares():
     accesstoken = get_access_token()
-    print "Fetching shares ..."
+    logg("Fetching shares ...")
     get_share_url = "http://open.ge.tt/1/shares?accesstoken=" + accesstoken
     r = requests.get(get_share_url)
     shares = r.json()
@@ -51,7 +56,7 @@ def get_shares():
                 (len(shr['files']), shr['sharename'], shr['getturl'])
 
 def get_share_info(sharename):
-    print "Fetching share info ..."
+    logg("Fetching share info ...")
     get_share_url = "http://open.ge.tt/1/shares/" + sharename
     r = requests.get(get_share_url)
     share_info = r.json()
@@ -61,7 +66,7 @@ def get_share_info(sharename):
 
 def create_share():
     accesstoken = get_access_token()
-    print "Constructing a new share ..."
+    logg("Constructing a new share ...")
     r = requests.post(SHARE_URL + accesstoken)
     if r.status_code != 200:
         refresh_access_token()
@@ -69,7 +74,7 @@ def create_share():
     return r.json().get('sharename')
 
 def destroy_share(sharename):
-    print "Destroying share ..."
+    logg("Destroying share ...")
     accesstoken = get_access_token()
     url = "http://open.ge.tt/1/shares/%s/destroy?accesstoken=%s" % (sharename, accesstoken)
     r = requests.post(url)
@@ -82,14 +87,14 @@ def destroy_share(sharename):
 def upload_file(sharename, filename):
     accesstoken = get_access_token()
     file_url = "http://open.ge.tt/1/files/%s/create?accesstoken=%s" % (sharename, accesstoken)
-    print "Setting up a file name ..."
+    logg("Setting up a file name ...")
     r = requests.post(file_url, data=json.dumps({"filename": filename }))
     if r.status_code != 200:
         refresh_access_token()
         return upload_file(sharename, filename)
     gett_url = r.json().get('getturl')
     post_upload_url = r.json()['upload']['posturl']
-    print "Uploading the file..."
+    logg("Uploading the file...")
     r = requests.post(post_upload_url, files={'file': open(filename, 'rb')})
     if r.status_code == 200:
         print "Upload successful. Here's your url: %s" % gett_url
@@ -125,12 +130,22 @@ def write_config(fields):
     with open(file_location, 'wb') as configfile:
         config.write(configfile)
 
+def glob_upload(pattern):
+    files = glob(pattern)
+    if not files:
+        print "No matches found."
+        sys.exit(0)
+    logg("%d file(s) found" % len(files))
+    sharename = create_share()
+    for f in files:
+        upload_file(sharename, f)
+
 def setup_tokens():
     email = raw_input("Please enter your Ge.tt email: ").strip()
     password = raw_input("Please enter your Ge.tt password: ").strip()
     apikey = raw_input("Please enter your API KEY: ").strip()
 
-    print "Validating credentials ..."
+    logg("Validating credentials ...")
     r = requests.post(LOGIN_URL, data=json.dumps({'email': email, 'password': password,
                                                   'apikey': apikey}))
 
@@ -138,7 +153,7 @@ def setup_tokens():
     if not accesstoken or not refreshtoken:
         print "Error! Your credentials failed validation. Exiting program"
         sys.exit(0)
-    print "Credentials verified  ..."
+    logg("Credentials verified ...")
     write_config({'accesstoken': accesstoken, 'refreshtoken': refreshtoken})
     return accesstoken
 
@@ -146,16 +161,27 @@ def get_access_token():
     return read_config('accesstoken') or setup_tokens()
 
 def main():
-    parser = argparse.ArgumentParser(description="Upload files to ge.tt via the command line")
+    parser = argparse.ArgumentParser(description="Upload files to ge.tt via the command line",
+                                     epilog="For more information, examples, source code visit http://github.com/prakhar1989/gettup")
     parser.add_argument("-s", "--share", metavar="share_name", type=str,
                         help="get info for a specific share")
     parser.add_argument("-u", "--upload", metavar="file", type=str,
                         help="provide a file to upload")
     parser.add_argument("-d", "--destroy", metavar="share_name", type=str,
                         help="destroy a share & all files in it")
+    parser.add_argument("-g", "--glob", metavar="pattern", type=str,
+                        help="upload multiple files matching a pattern")
+    parser.add_argument("-v", "--verbose", action="store_true",
+                        help="Toggle verbose off (default is on)")
     args = parser.parse_args()
+
+    global VERBOSE
+    VERBOSE = not args.verbose
+
     if args.destroy:
         destroy_share(args.destroy)
+    elif args.glob:
+        glob_upload(args.glob)
     elif args.share and not args.upload:
         get_share_info(args.share)
     elif args.upload and not args.share:

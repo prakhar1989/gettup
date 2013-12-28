@@ -44,12 +44,7 @@ Upload files to ge.tt via the command line
 
 optional arguments:
   -h, --help            show this help message and exit
-  -s share_name, --share share_name
-                        get info for a specific share
-  -u file, --upload file
-                        provide a file to upload
-  -d share_name, --destroy share_name
-                        destroy a share & all files in it
+..
 ```
 
 When `gett` is run from the command line without any arguments, it fetches the list of all shares. Shares are like albums or groups of files on ge.tt. You can have a share containing no files, a single file or lots of files.
@@ -75,6 +70,11 @@ $ gett -u something.txt -s 5d1ctaB1
 Setting up a file name ...
 Uploading the file...
 Upload successful. Here's your url: http://ge.tt/5d1ctaB1/v/1
+```
+
+For multiple file upload, you can use globs (in quotes).
+```
+$ gett -g "*.txt"
 ```
 
 To delete a share use the -d flag. To get more info about a share, use the -s flag accompanied by a sharename.
