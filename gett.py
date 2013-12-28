@@ -22,11 +22,16 @@ import sys
 import argparse
 import os
 from glob import glob
+import signal
 
 # GETT URLS
 LOGIN_URL = "http://open.ge.tt/1/users/login"
 SHARE_URL = "http://open.ge.tt/1/shares/create?accesstoken="
 VERBOSE = True
+
+def signal_handler(signal, frame):
+    """ graceful exit on keyboard interrupt """
+    sys.exit(0)
 
 def logg(msg):
     if VERBOSE:
@@ -161,6 +166,8 @@ def get_access_token():
     return read_config('accesstoken') or setup_tokens()
 
 def main():
+    signal.signal(signal.SIGINT, signal_handler)
+
     parser = argparse.ArgumentParser(description="Upload files to ge.tt via the command line",
                                      epilog="For more information, examples, source code visit http://github.com/prakhar1989/gettup")
     parser.add_argument("-s", "--share", metavar="share_name", type=str,
