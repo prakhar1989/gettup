@@ -169,21 +169,31 @@ def main():
     signal.signal(signal.SIGINT, signal_handler)
 
     parser = argparse.ArgumentParser(description="Upload files to ge.tt via the command line",
-                                     epilog="For more information, examples, source code visit http://github.com/prakhar1989/gettup")
-    parser.add_argument("-s", "--share", metavar="share_name", type=str,
-                        help="get info for a specific share")
-    parser.add_argument("-u", "--upload", metavar="file", type=str,
-                        help="provide a file to upload")
-    parser.add_argument("-d", "--destroy", metavar="share_name", type=str,
-                        help="destroy a share & all files in it")
-    parser.add_argument("-g", "--glob", metavar="pattern", type=str,
-                        help="upload multiple files matching a pattern")
-    parser.add_argument("-v", "--verbose", action="store_true",
-                        help="Toggle verbose off (default is on)")
+                                     epilog="For more information, examples & source code visit http://github.com/prakhar1989/gettup")
+
+    file_uploads = parser.add_argument_group("File Uploads")
+    file_uploads.add_argument("-u", "--upload", metavar="file",
+                             help="provide a file to upload")
+    file_uploads.add_argument("-g", "--glob", metavar="pattern",
+                             help="upload multiple files matching a pattern")
+    file_uploads.add_argument("-s", "--share", metavar="share_id",
+                             help="upload files to a particular share")
+    file_uploads.add_argument("-r", "--remove", metavar="file_id",
+                             help="Delete a specific file")
+
+    share_group = parser.add_argument_group('Share Related')
+    share_group.add_argument("-i", '--info', metavar="share_id",
+                            help="get info for a specific share")
+    share_group.add_argument('-d', '--delete', metavar="share_id",
+                            help="destroy a share & all files in it")
+
+    misc_group = parser.add_argument_group('Other actions')
+    misc_group.add_argument('-q', '--quiet', action="store_true",
+                           help="Toggle verbose off (default is on)")
     args = parser.parse_args()
 
     global VERBOSE
-    VERBOSE = not args.verbose
+    VERBOSE = not args.quiet
 
     if args.destroy:
         destroy_share(args.destroy)
