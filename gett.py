@@ -1,21 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8 
 
-# Copyright 2013 - Prakhar Srivastav
-
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 import requests
 import json
 import sys
@@ -185,7 +170,7 @@ def main():
     share_group.add_argument("-i", '--info', metavar="share_id",
                             help="get info for a specific share")
     share_group.add_argument('-d', '--delete', metavar="share_id",
-                            help="destroy a share & all files in it")
+                            help="delete a share & all files in it")
 
     misc_group = parser.add_argument_group('Other actions')
     misc_group.add_argument('-q', '--quiet', action="store_true",
@@ -195,8 +180,9 @@ def main():
     global VERBOSE
     VERBOSE = not args.quiet
 
-    if args.destroy:
-        destroy_share(args.destroy)
+    # TODO: Start below - fix argparse
+    if args.delete:
+        destroy_share(args.delete)
     elif args.glob:
         glob_upload(args.glob)
     elif args.share and not args.upload:
