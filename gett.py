@@ -196,10 +196,9 @@ def main():
     parser = argparse.ArgumentParser(description="Upload files to ge.tt via the command line",
                                      epilog="For more information, examples & source code visit http://github.com/prakhar1989/gettup")
 
-    # TODO: fix arguments!
     # FILE UPLOADS
     file_uploads = parser.add_argument_group("File Uploads")
-    file_uploads.add_argument("--files", metavar="files", nargs="+",
+    file_uploads.add_argument("files", metavar="files", nargs="*",
                              help="list of files you want to upload")
     file_uploads.add_argument("-s", "--share", metavar="share_id",
                              help="upload files to a particular share")
@@ -236,12 +235,15 @@ def main():
         for sharename in args.delete:
             destroy_share(sharename)
 
-    if args.files:
-        bulk_upload(args.files, sharename=args.share, title=args.title)
-
     if args.remove:
         for url in args.remove:
             delete_url(url)
+
+    if args.files:
+        bulk_upload(args.files, sharename=args.share, title=args.title)
+
+    if len(sys.argv) == 1:
+        parser.print_help()
 
 if __name__ == "__main__":
     main()
