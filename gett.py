@@ -77,8 +77,7 @@ def get_share_info(sharename):
         return
     print "Share: %s | gett url: %s | total files: %d" % (sharename, share_info['getturl'], len(share_info['files']))
     for f in share_info['files']:
-        # print f
-        print f['filename'], "%s bytes " % f['size'], f['getturl']
+        print f['getturl'], humanize(f['size']), f['filename']
 
 def delete_file(sharename, fileid):
     """ deletes a file in a specific share and a fileId """
@@ -205,6 +204,13 @@ def setup_tokens():
 def get_access_token():
     """ retrieves access token either from the config file or from the user """
     return read_config('accesstoken') or setup_tokens()
+
+def humanize(nbytes):
+    """ returns the file size in human readable format """
+    for (exp, unit) in ((9, 'GB'), (6, 'MB'), (3, 'KB'), (0, 'B')):
+        if nbytes >= 10**exp:
+            break
+    return "%.2f %s" % (float(nbytes)/10**exp, unit)
 
 def main():
     """ ENTRY METHOD """
