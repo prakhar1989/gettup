@@ -8,7 +8,7 @@ if sys.version_info < (2, 7):
     requirements.append('argparse>=1.2.1')
 
 setup(name='gettup',
-      version='0.2.0',
+      version='0.3.0',
       description='A command-line file sharing utility for ge.tt',
       long_description=open("README.md").read(),
       keywords="CLI filesharing file sharing upload command-line",
