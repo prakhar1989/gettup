@@ -21,60 +21,59 @@ sudo python setup.py install
 3. Run the application. The app will ask for your credentials the first the app is run. 
 
 ```
-$ gett
+$ gett file1.txt
 Please enter your Ge.tt email: example@example.com
 Please enter your Ge.tt password: verysecurepassword
 Please enter your API KEY: supersecretapikey
 Validating credentials ...
-Credentials verified  ...
-Fetching shares ...
-1 file(s) in share: 5d1ctaB1 (http://ge.tt/5d1ctaB1)
-1 file(s) in share: 8BSfsaB1 (http://ge.tt/8BSfsaB1)
-1 file(s) in share: 93hTsaB1 (http://ge.tt/93hTsaB1)
-2 file(s) in share: 1m4yqaB1 (http://ge.tt/1m4yqaB1)
+Credentials verified ...
+Constructing a new share ...
+Uploading file: README.md
+Setting up a file name ...
+Uploading the file...
+Upload successful. Here's your url: http://ge.tt/6zkcEkB1/v/0
+----------------------------------------
 ```
 
 ## Examples
 `gett` displays a helpful help text when run with the `-h` flag.
 ``` 
-$ gett -h
-usage: gett.py [-h] [-s share_name] [-u file] [-d share_name]
+$ gett
+usage: gett.py [-h] [-s share_id] [-t share_title] [-i share_id]
+               [-d share_id [share_id ...]] [-l] [-r file_url [file_url ...]]
+               [-q]
+               [files [files ...]]
 
 Upload files to ge.tt via the command line
-
-optional arguments:
-  -h, --help            show this help message and exit
-..
 ```
 
-When `gett` is run from the command line without any arguments, it fetches the list of all shares. Shares are like albums or groups of files on ge.tt. You can have a share containing no files, a single file or lots of files.
-
+Command Examples - 
 ```
-$ gett
-Fetching shares ...
-1 file(s) in share: 5d1ctaB1 (http://ge.tt/5d1ctaB1)
-1 file(s) in share: 8BSfsaB1 (http://ge.tt/8BSfsaB1)
-1 file(s) in share: 93hTsaB1 (http://ge.tt/93hTsaB1)
-2 file(s) in share: 1m4yqaB1 (http://ge.tt/1m4yqaB1)
+$ gett                            # show help
+$ gett file1 file2 file3          # upload files (in same share)
+$ gett *.py                       # linux globs (upload)
+$ gett *.py -s sharename          # upload file in the specific share
+$ gett *.py -s sharename -t title # gives the title to the new share
+$ gett --list                     # show list of shares
+$ gett -d share1 share2 share3    # deletes the shares
+$ gett -r url1 url2 url 3         # deletes the file url
+$ gett -q {etc}                   # quiet mode
+$ gett -i sharename               # get share info
 ```
 
 To upload a file, use the -u flag. By default, `gett` will create a new share for uploading the file. Use the -s flag, alongwith a sharename to upload to an existing share
 ```
-$ gett -u something.txt
+$ gett something.txt
 Constructing a new share ...
 Setting up a file name ...
 Uploading the file...
 Upload successful. Here's your url: http://ge.tt/1NcgabB1/v/0
+----------------------------------------
 
-$ gett -u something.txt -s 5d1ctaB1
+$ gett something.txt -s 5d1ctaB1
 Setting up a file name ...
 Uploading the file...
 Upload successful. Here's your url: http://ge.tt/5d1ctaB1/v/1
-```
-
-For multiple file upload, you can use globs (in quotes).
-```
-$ gett -g "*.txt"
 ```
 
 To delete a share use the -d flag. To get more info about a share, use the -s flag accompanied by a sharename.
@@ -83,11 +82,9 @@ $ gett -d 1NcgabB1
 Destroying share ...
 1NcgabB1 share has been destroyed
 
-$ gett -s 5d1ctaB1
-Fetching share info ...
-Share: 5d1ctaB1 | gett url: http://ge.tt/5d1ctaB1 | total files: 2
-something.txt 19 bytes  http://ge.tt/5d1ctaB1/v/1
-shot2.png 595250 bytes  http://ge.tt/5d1ctaB1/v/0
+$ gett -r http://ge.tt/6zkcEkB1/v/0
+Deleting file ...
+File has been successfully destroyed
 ```
 
 ## Upgrade
