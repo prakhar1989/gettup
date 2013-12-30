@@ -35,17 +35,22 @@ def signal_handler(signal, frame):
     sys.exit(0)
 
 def logg(msg):
-    if VERBOSE:
-        print msg
+    """ print to screen based on VERBOSE toggling """
+    if VERBOSE: print msg
 
 def refresh_access_token():
+    """ re-fetches fresh access tokens using the refresh token and writes to the config file """
     logg("Updating expired tokens ...")
     refreshtoken = read_config('refreshtoken')
     r = requests.post(LOGIN_URL, data=json.dumps({'refreshtoken': refreshtoken }))
+    if r.status_code != 200:
+        print "Error: Cannot fetch tokens. Try deleting the ~/.gett.cfg file and re-trying"
+        sys.exit(0)
     accesstoken, refreshtoken = r.json().get('accesstoken'), r.json().get('refreshtoken')
     write_config({'accesstoken': accesstoken, 'refreshtoken': refreshtoken})
 
 def get_shares():
+    """ gets the list of all shares using an accesstoken and prints on screen """
     accesstoken = get_access_token()
     logg("Fetching shares ...")
     get_share_url = "http://open.ge.tt/1/shares?accesstoken=" + accesstoken
@@ -57,11 +62,12 @@ def get_shares():
     if not shares:
         print "You don't have any shares. Create a new share by uploading a file"
     else:
-        for shr in shares:
+        for shr in shares: # TODO: beautify and humanize
             print "%d file(s) in share: %s (%s)" % \
                 (len(shr['files']), shr['sharename'], shr['getturl'])
 
 def get_share_info(sharename):
+    """ retrives the information of files stored in a specific share """
     logg("Fetching share info ...")
     get_share_url = "http://open.ge.tt/1/shares/" + sharename
     r = requests.get(get_share_url)
@@ -75,6 +81,7 @@ def get_share_info(sharename):
         print f['filename'], "%s bytes " % f['size'], f['getturl']
 
 def delete_file(sharename, fileid):
+    """ deletes a file in a specific share and a fileId """
     logg("Deleting file ...")
     accesstoken = get_access_token()
     destroy_url = "http://open.ge.tt/1/files/%s/%s/destroy?accesstoken=%s" % \
@@ -85,16 +92,16 @@ def delete_file(sharename, fileid):
         return delete_file(sharename, fileid)
     print "File has been successfully destroyed"
 
-
 def delete_url(url):
+    """ deletes the file corresponding to the URL """
     fields = url.split('/')
     if len(fields) != 6:
         print "Error: Invalid url format"
         return
     delete_file(fields[3], fields[-1])
 
-
 def create_share(title=None):
+    """ creates a new share with an optional title and returns the share id """
     accesstoken = get_access_token()
     logg("Constructing a new share ...")
     if title:
@@ -107,6 +114,8 @@ def create_share(title=None):
     return r.json().get('sharename')
 
 def destroy_share(sharename):
+    # TODO: Goes in infinite loop when the share does not exist
+    # as the wrong status code is returned
     logg("Destroying share ...")
     accesstoken = get_access_token()
     url = "http://open.ge.tt/1/shares/%s/destroy?accesstoken=%s" % (sharename, accesstoken)
@@ -118,6 +127,7 @@ def destroy_share(sharename):
         return destroy_share(sharename)
 
 def upload_file(sharename, filename):
+    """ upload a file in share with the sharename """
     accesstoken = get_access_token()
     file_url = "http://open.ge.tt/1/files/%s/create?accesstoken=%s" % (sharename, accesstoken)
     logg("Setting up a file name ...")
@@ -135,10 +145,12 @@ def upload_file(sharename, filename):
         print "Error: " + r.json().get('error')
 
 def config_file():
+    """ returns the location (~/.gett.cfg) of the config file in user's home dir """
     home = os.getenv('USERPROFILE') or os.getenv('HOME')
     return os.path.join(home, '.gett.cfg')
 
 def read_config(token):
+    """ reads token values from the configuration file """
     file_location = config_file()
     if sys.version_info[0] == 3:
         import configparser as cp
@@ -151,6 +163,7 @@ def read_config(token):
     return config.get('TOKENS', token)
 
 def write_config(fields):
+    """ writes a set of fields into the config file """
     if sys.version_info[0] == 3:
         import configparser as cp
     else:
@@ -164,6 +177,7 @@ def write_config(fields):
         config.write(configfile)
 
 def bulk_upload(files, sharename=None, title=None):
+    """ wrapper for uploading more than one files into a share(with optional title) """
     sharename = sharename or create_share(title)
     for f in files:
         print "Uploading file: " + f
@@ -171,6 +185,7 @@ def bulk_upload(files, sharename=None, title=None):
         logg("----------------------------------------")
 
 def setup_tokens():
+    """ fetch fresh tokens using user's credentials """
     email = raw_input("Please enter your Ge.tt email: ").strip()
     password = raw_input("Please enter your Ge.tt password: ").strip()
     apikey = raw_input("Please enter your API KEY: ").strip()
@@ -188,9 +203,11 @@ def setup_tokens():
     return accesstoken
 
 def get_access_token():
+    """ retrieves access token either from the config file or from the user """
     return read_config('accesstoken') or setup_tokens()
 
 def main():
+    """ ENTRY METHOD """
     signal.signal(signal.SIGINT, signal_handler)
 
     parser = argparse.ArgumentParser(description="Upload files to ge.tt via the command line",
