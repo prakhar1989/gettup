@@ -1,12 +1,28 @@
 #!/usr/bin/env python
 # coding: utf-8 
 
+"""
+gettup - A command-line file sharing utility for ge.tt
+usage:
+$ gett                            > show help
+$ gett file1 file2 file3          > upload files (in same share)
+$ gett *.py                       > linux globs (upload)
+$ gett *.py -p                    > parallelize uploads
+$ gett *.py -z                    > zips the files and uploads
+$ gett *.py -s sharename          > upload file in the specific share
+$ gett *.py -s sharename -t title > gives the title to the new share
+$ gett --list                     > show list of shares
+$ gett -d share1 share2 share3    > deletes the shares
+$ gett -r url1 url2 url 3         > deletes the file url
+$ gett -q {etc}                   > quiet mode
+$ gett -i sharename               > get share info
+
+"""
 import requests
 import json
 import sys
 import argparse
 import os
-from glob import glob
 import signal
 
 # GETT URLS
@@ -50,14 +66,41 @@ def get_share_info(sharename):
     get_share_url = "http://open.ge.tt/1/shares/" + sharename
     r = requests.get(get_share_url)
     share_info = r.json()
+    if r.status_code != 200:
+        print "Error: Share not found"
+        return
     print "Share: %s | gett url: %s | total files: %d" % (sharename, share_info['getturl'], len(share_info['files']))
     for f in share_info['files']:
+        # print f
         print f['filename'], "%s bytes " % f['size'], f['getturl']
 
-def create_share():
+def delete_file(sharename, fileid):
+    logg("Deleting file ...")
+    accesstoken = get_access_token()
+    destroy_url = "http://open.ge.tt/1/files/%s/%s/destroy?accesstoken=%s" % \
+                  (sharename, fileid, accesstoken)
+    r = requests.post(destroy_url)
+    if r.status_code != 200:
+        refresh_access_token()
+        return delete_file(sharename, fileid)
+    print "File has been successfully destroyed"
+
+
+def delete_url(url):
+    fields = url.split('/')
+    if len(fields) != 6:
+        print "Error: Invalid url format"
+        return
+    delete_file(fields[3], fields[-1])
+
+
+def create_share(title=None):
     accesstoken = get_access_token()
     logg("Constructing a new share ...")
-    r = requests.post(SHARE_URL + accesstoken)
+    if title:
+        r = requests.post(SHARE_URL + accesstoken, data=json.dumps({'title': title}))
+    else:
+        r = requests.post(SHARE_URL + accesstoken)
     if r.status_code != 200:
         refresh_access_token()
         return create_share()
@@ -120,15 +163,12 @@ def write_config(fields):
     with open(file_location, 'wb') as configfile:
         config.write(configfile)
 
-def glob_upload(pattern):
-    files = glob(pattern)
-    if not files:
-        print "No matches found."
-        sys.exit(0)
-    logg("%d file(s) found" % len(files))
-    sharename = create_share()
+def bulk_upload(files, sharename=None, title=None):
+    sharename = sharename or create_share(title)
     for f in files:
+        print "Uploading file: " + f
         upload_file(sharename, f)
+        logg("----------------------------------------")
 
 def setup_tokens():
     email = raw_input("Please enter your Ge.tt email: ").strip()
@@ -156,22 +196,28 @@ def main():
     parser = argparse.ArgumentParser(description="Upload files to ge.tt via the command line",
                                      epilog="For more information, examples & source code visit http://github.com/prakhar1989/gettup")
 
+    # TODO: fix arguments!
+    # FILE UPLOADS
     file_uploads = parser.add_argument_group("File Uploads")
-    file_uploads.add_argument("-u", "--upload", metavar="file",
-                             help="provide a file to upload")
-    file_uploads.add_argument("-g", "--glob", metavar="pattern",
-                             help="upload multiple files matching a pattern")
+    file_uploads.add_argument("--files", metavar="files", nargs="+",
+                             help="list of files you want to upload")
     file_uploads.add_argument("-s", "--share", metavar="share_id",
                              help="upload files to a particular share")
-    file_uploads.add_argument("-r", "--remove", metavar="file_id",
-                             help="Delete a specific file")
+    file_uploads.add_argument("-t", "--title", metavar='share_title',
+                             help='title for the new share')
 
+    # SHARE RELATED COMMANDS
     share_group = parser.add_argument_group('Share Related')
     share_group.add_argument("-i", '--info', metavar="share_id",
                             help="get info for a specific share")
-    share_group.add_argument('-d', '--delete', metavar="share_id",
+    share_group.add_argument('-d', '--delete', metavar="share_id", nargs="+",
                             help="delete a share & all files in it")
+    share_group.add_argument('-l', '--list', action="store_true",
+                            help="Lists all shares in your account")
+    share_group.add_argument('-r', '--remove', metavar="file_url", nargs="+",
+                            help="Delete a list of files with associated urls")
 
+    # MISC COMMANDS
     misc_group = parser.add_argument_group('Other actions')
     misc_group.add_argument('-q', '--quiet', action="store_true",
                            help="Toggle verbose off (default is on)")
@@ -180,20 +226,22 @@ def main():
     global VERBOSE
     VERBOSE = not args.quiet
 
-    # TODO: Start below - fix argparse
-    if args.delete:
-        destroy_share(args.delete)
-    elif args.glob:
-        glob_upload(args.glob)
-    elif args.share and not args.upload:
-        get_share_info(args.share)
-    elif args.upload and not args.share:
-        sharename = create_share()
-        upload_file(sharename, args.upload)
-    elif args.upload and args.share:
-        upload_file(args.share, args.upload)
-    else:
+    if args.info:
+        get_share_info(args.info)
+
+    if args.list:
         get_shares()
+
+    if args.delete:
+        for sharename in args.delete:
+            destroy_share(sharename)
+
+    if args.files:
+        bulk_upload(args.files, sharename=args.share, title=args.title)
+
+    if args.remove:
+        for url in args.remove:
+            delete_url(url)
 
 if __name__ == "__main__":
     main()

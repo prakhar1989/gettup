@@ -3,9 +3,9 @@
 import sys
 from setuptools import setup, find_packages
 
-requirements = ['requests']
+requirements = ['requests>=2.0.0']
 if sys.version_info < (2, 7):
-    requirements.append('argparse')
+    requirements.append('argparse>=1.2.1')
 
 setup(name='gettup',
       version='0.1.2',
@@ -24,4 +24,3 @@ setup(name='gettup',
       },
       zip_safe=False
      )
-
