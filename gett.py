@@ -16,7 +16,6 @@ $ gett -d share1 share2 share3    > deletes the shares
 $ gett -r url1 url2 url 3         > deletes the file url
 $ gett -q {etc}                   > quiet mode
 $ gett -i sharename               > get share info
-
 """
 import requests
 import json
@@ -62,7 +61,7 @@ def get_shares():
     if not shares:
         print "You don't have any shares. Create a new share by uploading a file"
     else:
-        for shr in shares: # TODO: beautify and humanize
+        for shr in shares:
             print "%d file(s) in share: %s (%s)" % \
                 (len(shr['files']), shr['sharename'], shr['getturl'])
 
@@ -113,8 +112,6 @@ def create_share(title=None):
     return r.json().get('sharename')
 
 def destroy_share(sharename):
-    # TODO: Goes in infinite loop when the share does not exist
-    # as the wrong status code is returned
     logg("Destroying share ...")
     accesstoken = get_access_token()
     url = "http://open.ge.tt/1/shares/%s/destroy?accesstoken=%s" % (sharename, accesstoken)
