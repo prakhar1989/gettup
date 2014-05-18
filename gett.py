@@ -118,6 +118,8 @@ def destroy_share(sharename):
     r = requests.post(url)
     if r.status_code == 200:
         print "%s share has been destroyed" % sharename
+    elif r.status_code == 403:
+        print "%s share doesn't belong to authenticated user" % sharename
     else:
         refresh_access_token()
         return destroy_share(sharename)
